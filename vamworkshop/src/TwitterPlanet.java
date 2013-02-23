@@ -24,6 +24,11 @@
  * added midi libraries, electribe and sequencer control 3/15 12
  */
 
+/*
+ * TWITTER PLANET UPDATE
+ * 
+ * */
+
 package src;
 
 import org.json.JSONArray;
@@ -62,7 +67,7 @@ import ddf.minim.*;
  * </p>
  */
 @SuppressWarnings("serial")
-public class SoundPlanet extends PApplet {
+public class TwitterPlanet extends PApplet {
 
 	//Radius of our globe
 	private static final int EARTH_RADIUS = 300;
@@ -75,7 +80,7 @@ public class SoundPlanet extends PApplet {
 	 */
 ///*
 	public static void main(String[] args) {
-		PApplet.main(new String[] { "src.SoundPlanet" });
+		PApplet.main(new String[] { "src.TwitterPlanet" });
 	}
 	// */
 
@@ -120,16 +125,7 @@ public class SoundPlanet extends PApplet {
 	float oscY0;
 	float oscX1;
 	float oscY1;
-	
-	/// minim audio objects
-	/// sine waves
-	/**/
-	Minim minim;
-	AudioOutput out;
-	SawWave saw;
-	
-	// AudioControl theAudio;
-	
+
 	/// MIDI objects
 	MidiControl midiControl;
 	
@@ -176,12 +172,6 @@ public class SoundPlanet extends PApplet {
 		// instead of passing it back and forth like a potato
 		dataProfile.pApp = this; 
 		
-		/// set up midi profiles
-		minim = new Minim(this);
-		// init the audio singleton
-		// theAudio = theAudio.getInstance();
-		// theAudio.initAudio();
-		
 		/// midi control
 		midiControl = MidiControl.getInstance();
 		midiControl.initMidi();
@@ -191,7 +181,6 @@ public class SoundPlanet extends PApplet {
 	}
 	
 	public void draw() {
-		midiControl.checkMidiCounter();
 		// smoothly interpolate camera rotation
 		// to new rotation vector based on mouse position
 		// each frame we only approach that rotation by 25% (0.25 value)
@@ -211,10 +200,7 @@ public class SoundPlanet extends PApplet {
 			theCamX = camRot.x;
 			theCamY = camRot.y;
 			
-		//// do pitch changes
-			midiControl.doPitchChange(new Float(theCamY) * 10);
-				
-			
+
 		///// CHECK FOR OSC INPUT TO SET CAMERA
 		} else if (hasOsc == true) {
 			/// map(value, low1, high1, low2, high2)
@@ -236,14 +222,14 @@ public class SoundPlanet extends PApplet {
 			isMoving = false;
 			try{
 			
-			saw.setAmp(0f);
+			/// saw.setAmp(0f);
 			} catch (Exception e){
 				// println("can't set amplitude: " + e);
 			}
 		} else {
 			isMoving = true;
 			try{
-			saw.setAmp(1f);
+			/// saw.setAmp(1f);
 				
 			} catch (Exception e){
 				// println("can't set amplitude: " + e);
@@ -311,28 +297,7 @@ public class SoundPlanet extends PApplet {
 		
 		// restore (default) depth testing
 		hint(ENABLE_DEPTH_TEST);
-		
-		
-		
-		///// AUDIO STUFF
-		if(doAudio == true){
-			/*
-		 // with portamento on the frequency will change smoothly
-			// convert cam value to int
-			int newX = (int)theCamX;
-			int newY = (int)theCamY;
-			// map(value, low1, high1, low2, high2)
-		  float freq = map(new Float(theCamX), 2.00f, 4.00f, 60f, 1000f);
-		  saw.setFreq(freq);
-		  // pan always changes smoothly to avoid crackles getting into the signal
-		  // note that we could call setPan on out, instead of on sine
-		  // this would sound the same, but the waveforms in out would not reflect the panning
-		  // float sampleRate = map(mouseX, 0, width, 0, 1);
-		 // float peaks = map(mouseY, 0, height, 1, 20);
-		  float pan = map(newY, 0, width, -1, 1);
-		  saw.setPan(pan);
-		  */
-		}
+
 
 	}
 
@@ -438,8 +403,9 @@ public class SoundPlanet extends PApplet {
 
 	}
 
-	
-	//////// osc input
+	/////////////////////////////////
+	//////// OSC INPUT //////////////
+	/////////////////////////////////
 	public void oscEvent(OscMessage theOscMessage) {
 		  /* print the address pattern of the received OscMessage */
 		String addr = theOscMessage.addrPattern();
@@ -539,48 +505,14 @@ public class SoundPlanet extends PApplet {
 		}
 		/// this does nothing
 		if (key == 'd') {
-			doAudio = true;
-			startOscillator();
+		println("I am an update and I matter");
 			
 		}
 		if (key == 'f') {
-			doAudio = false;
-			stopOscillator();
+			
 		}
 	}
 	
-///// start oscillator
-	public void startOscillator()
-	{
-		try{
-		// get a line out from Minim, default sample rate is 44100, bit depth is 16
-		  out = minim.getLineOut(Minim.STEREO, 2048);
-		 
-		// create a sine wave Oscillator, set to 440 Hz, at 0.5 amplitude, sample rate to match the line out
-		  saw = new SawWave(new Float(440), new Float(0.2), out.sampleRate());
-		  // set the portamento speed on the oscillator to 200 milliseconds
-		  saw.portamento(50);
-		  // add the oscillator to the line out
-		  out.addSignal(saw);
-		  
-		  // super.stop();
-		} catch (Exception e){
-			println("can't start!");
-		}
-	}
-	
-	///// stop oscillator
-	public void stopOscillator()
-	{
-		try{
-		  out.close();
-		  minim.stop();
-		  
-		  // super.stop();
-		} catch (Exception e){
-			println("can't stop!");
-		}
-	}
-	
+
 	// /
 }

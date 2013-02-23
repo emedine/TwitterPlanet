@@ -21,11 +21,7 @@ public class GPSMarker {
 	
 	int size1 = 12;
 	int size2 = 6;
-	
 
-	
-	AudioControl theAudio;
-	
 	MidiControl midiControl;
 	
 	//
@@ -46,9 +42,8 @@ public class GPSMarker {
 		pApp.println(theLong);
 		// set the gps data
 		this.gps = new Vec2D(theLong, theLat);
+
 		
-		theAudio = theAudio.getInstance();
-		// theAudio.initAudio();
 		/// midi control
 		midiControl = MidiControl.getInstance();
 		//
@@ -131,6 +126,8 @@ public class GPSMarker {
 		screenPos.set(app.screenX(pos.x, pos.y, pos.z), app.screenY(pos.x, pos.y, pos.z));
 
 		float dot = pos.getNormalized().dot(camPos);
+		
+		// if it's 'small', then it's 'behind' the globe
 		isVisible = dot > 0.66;
 	}
 	
