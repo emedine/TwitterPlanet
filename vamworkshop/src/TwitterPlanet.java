@@ -18,11 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* SOUND MACHINE BUILD BY ERIC MEDINE
- * added osc input 2/29/2012
- * added minim libraries 3/2/12
- * added midi libraries, electribe and sequencer control 3/15 12
- */
 
 /*
  * TWITTER PLANET UPDATE
@@ -30,6 +25,11 @@
  * */
 
 package src;
+
+// import TextSpawn;
+// import UserProfile;
+
+import java.util.ArrayList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,16 +47,30 @@ import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
 
-/// toxiclib 
+/// toxiclib for 3D
 import toxi.geom.Vec3D;
 import toxi.geom.mesh.Mesh3D;
 import toxi.geom.mesh.SphereFunction;
 import toxi.geom.mesh.SurfaceMeshBuilder;
 import toxi.processing.ToxiclibsSupport;
 
-// minim libraries
-import ddf.minim.*;
-// import ddf.minim.signals.*;
+//twitter libraries
+import twitter4j.Status;
+//import twitter4j.StatusAdapter;
+import twitter4j.IDs;
+import twitter4j.StatusDeletionNotice;
+import twitter4j.StatusListener;
+import twitter4j.Twitter;
+//import twitter4j.TwitterException;
+import twitter4j.TwitterStream;
+import twitter4j.TwitterStreamFactory;
+import twitter4j.TwitterFactory;
+import twitter4j.auth.AccessToken;
+import twitter4j.auth.RequestToken;
+import twitter4j.FilterQuery;
+import twitter4j.Paging;
+import twitter4j.User;
+//java libraries
 
 
 /*
@@ -107,6 +121,37 @@ public class TwitterPlanet extends PApplet {
 	String jsonString = "../data/LatLongData.txt";
 	JSONArray results;
 	JSONObject dbData;
+	
+	////// Twitter Params
+	int tweetLimit = 30;
+	int curTweetNum = 0;
+	
+	/// JSON STUFF FOR TWITTER
+	JSONArray sentimentArray;
+	JSONObject sentimentData;
+
+	// Oauth info
+	String OAuthConsumerKey = "4M5tIp8YTjua1fPgwXzbfw";
+	String OAuthConsumerSecret = "GBHtClbEhdT72AcgUguRIDvmXKA6jxYlzasaTM9Hl8";
+	// Access Token info
+	static String AccessToken = "633343317-hrcN0DAfVTvIFcAhc6EduWN9lFkSEThXQ422RUsd";
+	static String AccessTokenSecret = "doJ1GeGVpc6XUR10xoI8gXn4PdFrAAg8yN8JSBO17M";
+	//
+
+	String thePath = "http://api.twitter.com/1/users/show.json?user_id=";
+	// if you enter keywords here it will filter, otherwise it will sample
+	/// used barak obama because it returns a lot of results right away
+	String keywords[] = { "obama", "osama", "barak"};
+	
+	// array lists for users and re-tweeters
+	ArrayList<GPSMarker> UserArray = new ArrayList();
+	ArrayList<GPSMarker> RTArray = new ArrayList();
+	
+	// Twitter objects
+	TwitterStream twitter = new TwitterStreamFactory().getInstance();
+	Twitter twitterF = new TwitterFactory().getInstance();
+	
+	
 	// / lat and long arrays
 	float[] latArray;
 	float[] longArray;
@@ -176,16 +221,284 @@ public class TwitterPlanet extends PApplet {
 		midiControl = MidiControl.getInstance();
 		midiControl.initMidi();
 		
+		//// let's do some twitter!
+		connectTwitter();
+		twitter.addListener(listener);
+		if (keywords.length == 0) {
+			twitter.sample();
+		} else {
+			twitter.filter(new FilterQuery().track(keywords));
+		}
+		
+		
+		//// this does locations from our original DB
 		initLocations();
 
 	}
 	
 	public void draw() {
+
+		
+		background(0);
+		
+		renderGlobe();
+
+
+
+	}
+	
+	//////////////////////////////
+	////// TWITTER STREAM ///////////
+	///////////////////////////////
+	// INITIALIZE CONNECTION
+		void connectTwitter() {
+			/// stream
+			twitter.setOAuthConsumer(OAuthConsumerKey, OAuthConsumerSecret);
+			AccessToken accessToken = loadAccessToken();
+			twitter.setOAuthAccessToken(accessToken);
+			/// factory
+			twitterF.setOAuthConsumer(OAuthConsumerKey, OAuthConsumerSecret);
+			twitterF.setOAuthAccessToken(accessToken);
+		}
+
+		// Loading up the access token
+		private static AccessToken loadAccessToken() {
+			return new AccessToken(AccessToken, AccessTokenSecret);
+		}
+
+		// STATUS LISTENER
+		StatusListener listener = new StatusListener() {
+			public void onStatus(Status status) {
+				if(curTweetNum <tweetLimit){
+					
+
+					// println("@" + status.getUser().getScreenName() + " - " +
+					/// checks for tweets using the keyword
+					/// add user to the spot array
+					/// println("@" + status.getUser().getId() + " id: " + tweetID);
+					theUser = new UserProfile();
+					UserArray.add(theUser);
+
+					/// add all data to user profile
+					theUser.userID = status.getUser().getId();
+					theUser.StatusID = status.getId();
+					theUser.userName = status.getUser().getName();
+					theUser.screenName = status.getUser().getScreenName();
+					theUser.tweetText = status.getText();
+					theUser.timeZone = status.getUser().getTimeZone();
+					theUser.followersCount = status.getUser().getFollowersCount();
+					theUser.friendsCount = status.getUser().getFriendsCount();
+					theUser.favoritesCount = status.getUser().getFollowersCount();
+					theUser.theLocation = status.getUser().getLocation();
+		
+
+					//// ADD TEXT SPAWN
+					theTextSpawn = new TextSpawn();
+					/// set random tint
+					int theTint = (int)random(255 + 45);
+					int theOpacity = (int)random(255);
+					int theSize = (int)random(125) + 8;
+					/// set direction
+					int theDirection = (int)random(3);
+					Boolean isLeft;
+					if(theDirection >= 2){
+						isLeft = true;
+					} else {
+						isLeft = false;
+					}
+					theTextSpawn.initText(status.getText(), isLeft, theSize, color(theTint,theTint,theTint,theOpacity));
+					TextSizes[curTweetNum] = theSize;
+					TextSpawnArray.add(theTextSpawn);
+
+					curTweetNum +=1;
+		
+					// update max followers, favorites, and friends
+					// this allows for scalable amount indicators
+					if(theAppProfile.maxFollowers <= theUser.followersCount){
+						theAppProfile.maxFollowers = theUser.followersCount;
+		
+					}
+					if(theAppProfile.maxFavorites <= theUser.favoritesCount){
+						theAppProfile.maxFavorites = theUser.favoritesCount;
+		
+					}
+					if(theAppProfile.maxFriends <= theUser.friendsCount){
+						theAppProfile.maxFriends = theUser.friendsCount;
+		
+					}
+					/// REPLY CHECKS
+					if(status.getInReplyToScreenName() != null){
+						theUser.replyToScreenName = status.getInReplyToScreenName();
+						// println(theUser.screenName + " replied from: " + theUser.replyToScreenName);
+					}
+		
+					//// RETWEET CHECKS
+					try{
+						boolean isReTweet = status.isRetweet();
+						if(isReTweet == true){
+							theUser.reTweetCount = (int)status.getRetweetCount();
+							theUser.isReTweet = true;
+							theUser.reTweetToID = status.getInReplyToUserId();
+							theUser.replyToScreenName = status.getInReplyToScreenName();
+		
+							// println("Re tweeting: " + twitterF.getRetweetedByMe(new Paging(1)));
+							/// if so, let's see who's been retweeting!
+							//*
+							// https://api.twitter.com/1/statuses/145140823560957952/retweeted_by.json?count=100&page=1
+							// doAPIQuery("https://api.twitter.com/1/statuses/" + status.getId() + "/retweeted_by.json");
+							// Twitter twitterRT = new TwitterFactory().getInstance();
+							/// IDs ids = twitterF.getRetweetedByIDs(tweetID, new Paging(5));
+							Status reTweetStat = status.getRetweetedStatus();
+							long reTweetID = reTweetStat.getId();
+							IDs ids = twitterF.getRetweetedByIDs(reTweetID, new Paging(5));
+							/// println("RETWEETS: " + reTweetStat);
+							// List<User> users = twitterRT.getRetweetedBy(status.getId(), new Paging(1));
+							/// println(theUser.screenName + " Retweeted " + status.getId() + " " + theUser.reTweetCount + " times " + ids);
+							 for (long id : ids.getIDs()) {
+					                // println("RETWEETED BY: " + id);
+					         }
+							// println(status.getId() + " RETWEETED BY: " + twitterF.getRetweetedByIDs((long)status.getId(),  new Paging(1)));
+							/// ids = twitter.getRetweetedByIDs(Long.parseLong(args[0]), new Paging(page, 100));
+							/// add a re-tweet user
+		
+							 ///*/
+							addRTUser();
+		
+						} else {
+							/// theUser.isReTweet = false;
+						}
+					} catch (Exception e){
+						println("retweet error: rate limited");
+					}
+					theUser.initUser(); // initializes  user and sends info to DB
+		
+					/// to get a more detailed user profile
+					/// check to see if we're under the limit for twitter queries
+		
+		
+					/// if so, do twitter query in separate thread
+					// getUserInfo(theUser, newID);
+				}
+
+			}
+
+			public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {
+				// System.out.println("Got a status deletion notice id:" +
+				// statusDeletionNotice.getStatusId());
+			}
+
+			public void onTrackLimitationNotice(int numberOfLimitedStatuses) {
+				// System.out.println("Got track limitation notice:" +
+				// numberOfLimitedStatuses);
+			}
+
+			public void onScrubGeo(long userId, long upToStatusId) {
+				System.out.println("Got scrub_geo event userId:" + userId
+						+ " upToStatusId:" + upToStatusId);
+			}
+
+			public void onException(Exception ex) {
+				ex.printStackTrace();
+			}
+		};
+
+		/// this adds a user to the re-tweet array
+		private void addRTUser(){
+			theUser = new UserProfile();
+			RTArray.add(theUser);
+			// theUser.userID = userID;
+			// theUser.StatusID = tweetID;
+
+		}
+		///
+		private void doAPIQuery(String theString){
+			String thePath = theString;
+			String theXML[] = loadStrings(thePath);
+			String theXMLString = join(theXML, "").replace("> <", "><");
+			println("XML RETWEET: " + theXMLString);
+
+
+			/* doesn't like json
+			try{
+				sentimentData = new JSONObject(join(loadStrings(thePath), ""));
+				JSONObject tResult = sentimentData.getJSONObject("results");
+				// println("Array: " + sentimentArray.toString());
+
+				println("RESULT: " + sentimentData);
+
+			} catch (Exception e){
+				println("json error" + e);
+			}
+			*/
+
+		}
+		
+		///// DETAILED QUERY /////////////////////
+		public void getUserInfo(UserProfile theUser, long newID){
+			// /*
+			int tid = (int)newID;
+			String tPath = thePath + tid;
+			println("SEARCHING: " + thePath + tid);
+			try{
+				dbData = new JSONObject(join(loadStrings(tPath), ""));
+				// results = dbData.getJSONArray("id");
+				// println(results);
+				println(dbData);
+				/// add data
+				/// most of this we can get from the stream
+				/*
+
+				theUser.userName = dbData.getString("name");
+				theUser.screenName = dbData.getString("screen_name");
+
+				theUser.tweetText = dbData.getString("text");
+				theUser.createdAt = dbData.getString("created_at");
+				theUser.timeZone = dbData.getString("time_zone");
+				theUser.followersCount = dbData.getString("followers_count");
+
+				theUser.friendsCount = dbData.getString("friends_count");
+				theUser.favoritesCount = dbData.getString("favorites_count");
+				theUser.geoCoords = dbData.getString("coordinages");
+				theUser.replyToID = dbData.getString("in_reply_to_user_id");
+
+				if(dbData.getString("retweeted") == "true"){
+					theUser.reTweeted = "true";
+				} else {
+					theUser.reTweeted = "false";
+				};
+				/*
+				*/
+				//
+				println("user name: " + theUser.userName);
+				println("screen name: " + theUser.screenName);
+				println("timestamp: " + theUser.createdAt);
+				println("geoCoords: " + theUser.geoCoords);
+				println("reply to ID: " + theUser.replyToID);
+				println("followers" + theUser.followersCount);
+				println("friends" + theUser.friendsCount);
+				println("favorites: " + theUser.favoritesCount);
+				println("time zone: " + theUser.timeZone);
+				//
+
+
+				// numResults =  results.length();
+
+			} catch (JSONException e){
+				println("json error");
+			}
+			// */
+
+		}
+
+
+	///////////////////////////////
+	/// this does the globe render
+	////////////////////////////////
+	private void renderGlobe(){
 		// smoothly interpolate camera rotation
 		// to new rotation vector based on mouse position
 		// each frame we only approach that rotation by 25% (0.25 value)
 		
-		background(0);
 		lights();
 		// store default 2D coordinate system
 		pushMatrix();
@@ -297,10 +610,7 @@ public class TwitterPlanet extends PApplet {
 		
 		// restore (default) depth testing
 		hint(ENABLE_DEPTH_TEST);
-
-
 	}
-
 
 	
 

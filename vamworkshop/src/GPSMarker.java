@@ -84,7 +84,7 @@ public class GPSMarker {
 	    	// theAudio.playAudio();
 	    	
 	    } catch (Exception e){
-	    	
+	    	pApp.println("no audio data");
 	    }
 	}
 	/**
