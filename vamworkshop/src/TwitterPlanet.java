@@ -144,8 +144,12 @@ public class TwitterPlanet extends PApplet {
 	String keywords[] = { "obama", "osama", "barak"};
 	
 	// array lists for users and re-tweeters
+	ArrayList<GPSMarker> GPSArray = new ArrayList();
 	ArrayList<GPSMarker> UserArray = new ArrayList();
 	ArrayList<GPSMarker> RTArray = new ArrayList();
+	
+	/// marker object
+	GPSMarker theMarker;
 	
 	// Twitter objects
 	TwitterStream twitter = new TwitterStreamFactory().getInstance();
@@ -153,6 +157,7 @@ public class TwitterPlanet extends PApplet {
 	
 	
 	// / lat and long arrays
+	/// these are placeholders
 	float[] latArray;
 	float[] longArray;
 	int LatLongLength;
@@ -160,7 +165,7 @@ public class TwitterPlanet extends PApplet {
 	// / PApplet stuff
 	PApplet pApp;
 	// / init marker array
-	GPSMarker[] theMarker;
+	// GPSMarker[] theMarker;
 	
 	/// OSC objects
 	OscP5 oscP5;
@@ -221,6 +226,10 @@ public class TwitterPlanet extends PApplet {
 		midiControl = MidiControl.getInstance();
 		midiControl.initMidi();
 		
+		/// this populates a placeholder 
+		/// location array with lat and lon values
+		initLocations();
+		
 		//// let's do some twitter!
 		connectTwitter();
 		twitter.addListener(listener);
@@ -232,7 +241,7 @@ public class TwitterPlanet extends PApplet {
 		
 		
 		//// this does locations from our original DB
-		initLocations();
+		// initLocations();
 
 	}
 	
@@ -240,12 +249,78 @@ public class TwitterPlanet extends PApplet {
 
 		
 		background(0);
-		
+
 		renderGlobe();
 
 
 
 	}
+	/////////////////////////////////////////////
+	// //init the location array 
+	///// with ip addresses from the DB
+	/////////////////////////////////////////////
+	
+		public void initLocations() {
+			//*
+			try {
+				dbData = new JSONObject(join(loadStrings(jsonString), ""));
+				// println("results: " + result);
+				results = dbData.getJSONArray("latlong_data");
+				// total = dbData.getInt("total");
+				// / set length of arrays
+				LatLongLength = results.length();
+				// init our marker handler
+				latArray = new float[results.length()];
+				longArray = new float[results.length()];
+
+				// println("LENGTH: " + results.length());
+				
+				// // let's print this mother out
+				for (int i = 0; i < LatLongLength; i++) {
+
+					String theLat = results.getJSONObject(i).getString("lat");
+					String theLong = results.getJSONObject(i).getString("long");
+					println(results.getJSONObject(i).getString("lat"));
+					float lt = new Float(theLat);
+					float lo = new Float(theLong);
+					latArray[i] = lt;
+					longArray[i] = lo;
+					
+				}
+
+			} catch (JSONException e) {
+				println(e);
+			}
+
+			//*/
+			initDestroyer(); 
+		}
+	////set up markers and destroyer
+		public void initDestroyer() {
+			
+			/// set up markers
+			for (int i = 0; i < GPSArray.size(); i++) {
+				// / add a new GPS marker, set its lat and long arrays
+				// / and compute its position
+				// theMarker[i] = new GPSMarker(longArray[i], latArray[i]);
+				// theMarker[i].computePosOnSphere(EARTH_RADIUS);
+
+			}
+			
+			//// init the destroyer
+			//// placeholder lat and long
+			float lt = new Float(34.024704);
+			float lo = new Float(-84.5033);
+			
+			try {
+			theDestroyer = new Destroyer(lo, lt);
+			theDestroyer.computePosOnSphere(EARTH_RADIUS);
+			
+			} catch(Exception e){
+				println(e);
+			}
+		}
+
 	
 	//////////////////////////////
 	////// TWITTER STREAM ///////////
@@ -274,61 +349,81 @@ public class TwitterPlanet extends PApplet {
 
 					// println("@" + status.getUser().getScreenName() + " - " +
 					/// checks for tweets using the keyword
-					/// add user to the spot array
+					/// add user to the GPS array
 					/// println("@" + status.getUser().getId() + " id: " + tweetID);
-					theUser = new UserProfile();
-					UserArray.add(theUser);
+					// theUser = new UserProfile();
+					// UserArray.add(theUser);
+					// lat":"34.024704","long":"-84.5033",
+					float lt = new Float(34.024704);
+					float lo = new Float(-84.5033);
+					//*
+					if(status.getUser().isGeoEnabled()){
+						
+						status.getGeoLocation();
+						println("GEOLOC: " + status.getGeoLocation());
 
-					/// add all data to user profile
-					theUser.userID = status.getUser().getId();
-					theUser.StatusID = status.getId();
-					theUser.userName = status.getUser().getName();
-					theUser.screenName = status.getUser().getScreenName();
-					theUser.tweetText = status.getText();
-					theUser.timeZone = status.getUser().getTimeZone();
-					theUser.followersCount = status.getUser().getFollowersCount();
-					theUser.friendsCount = status.getUser().getFriendsCount();
-					theUser.favoritesCount = status.getUser().getFollowersCount();
-					theUser.theLocation = status.getUser().getLocation();
-		
-
-					//// ADD TEXT SPAWN
-					theTextSpawn = new TextSpawn();
-					/// set random tint
-					int theTint = (int)random(255 + 45);
-					int theOpacity = (int)random(255);
-					int theSize = (int)random(125) + 8;
-					/// set direction
-					int theDirection = (int)random(3);
-					Boolean isLeft;
-					if(theDirection >= 2){
-						isLeft = true;
 					} else {
-						isLeft = false;
+						println("NO GEOLOC: " + theMarker.theLocation);
+					//// find random lat and long
+						int tempLoc = (int)random(LatLongLength);
+						//// populate!
+						try{
+							lt =latArray[tempLoc];
+							lo =longArray[tempLoc];
+						} catch (Exception e){
+							println("Can't parse locations");
+							lt = new Float(34.024704);//latArray[tempLoc];
+							lo = new Float(-84.5033);//longArray[tempLoc];
+						}
+						
 					}
-					theTextSpawn.initText(status.getText(), isLeft, theSize, color(theTint,theTint,theTint,theOpacity));
-					TextSizes[curTweetNum] = theSize;
-					TextSpawnArray.add(theTextSpawn);
+					
+					theMarker = new GPSMarker(lo,lt);
+					/// theMarker = new GPSMarker(longArray[i], latArray[i]);
+					theMarker.computePosOnSphere(EARTH_RADIUS);
+					GPSArray.add(theMarker);
+					/// add all data to user profile
+					theMarker.userID = status.getUser().getId();
+					theMarker.StatusID = status.getId();
+					theMarker.userName = status.getUser().getName();
+					theMarker.screenName = status.getUser().getScreenName();
+					theMarker.tweetText = status.getText();
+					theMarker.timeZone = status.getUser().getTimeZone();
+					theMarker.followersCount = status.getUser().getFollowersCount();
+					theMarker.friendsCount = status.getUser().getFriendsCount();
+					theMarker.favoritesCount = status.getUser().getFollowersCount();
+					theMarker.theLocation = status.getUser().getLocation();
 
+
+					if(status.getUser().isGeoEnabled()){
+						theMarker.hasGeo = true;
+						status.getGeoLocation();
+						println("GEOLOC: " + status.getGeoLocation());
+
+					} else {
+						println("NO GEOLOC: " + theMarker.theLocation);
+					}
+					
+					
 					curTweetNum +=1;
 		
 					// update max followers, favorites, and friends
 					// this allows for scalable amount indicators
-					if(theAppProfile.maxFollowers <= theUser.followersCount){
-						theAppProfile.maxFollowers = theUser.followersCount;
+					if(dataProfile.maxFollowers <= theMarker.followersCount){
+						dataProfile.maxFollowers = theMarker.followersCount;
 		
 					}
-					if(theAppProfile.maxFavorites <= theUser.favoritesCount){
-						theAppProfile.maxFavorites = theUser.favoritesCount;
+					if(dataProfile.maxFavorites <= theMarker.favoritesCount){
+						dataProfile.maxFavorites = theMarker.favoritesCount;
 		
 					}
-					if(theAppProfile.maxFriends <= theUser.friendsCount){
-						theAppProfile.maxFriends = theUser.friendsCount;
+					if(dataProfile.maxFriends <= theMarker.friendsCount){
+						dataProfile.maxFriends = theMarker.friendsCount;
 		
 					}
 					/// REPLY CHECKS
 					if(status.getInReplyToScreenName() != null){
-						theUser.replyToScreenName = status.getInReplyToScreenName();
+						theMarker.replyToScreenName = status.getInReplyToScreenName();
 						// println(theUser.screenName + " replied from: " + theUser.replyToScreenName);
 					}
 		
@@ -336,10 +431,10 @@ public class TwitterPlanet extends PApplet {
 					try{
 						boolean isReTweet = status.isRetweet();
 						if(isReTweet == true){
-							theUser.reTweetCount = (int)status.getRetweetCount();
-							theUser.isReTweet = true;
-							theUser.reTweetToID = status.getInReplyToUserId();
-							theUser.replyToScreenName = status.getInReplyToScreenName();
+							theMarker.reTweetCount = (int)status.getRetweetCount();
+							theMarker.isReTweet = true;
+							theMarker.reTweetToID = status.getInReplyToUserId();
+							theMarker.replyToScreenName = status.getInReplyToScreenName();
 		
 							// println("Re tweeting: " + twitterF.getRetweetedByMe(new Paging(1)));
 							/// if so, let's see who's been retweeting!
@@ -362,7 +457,7 @@ public class TwitterPlanet extends PApplet {
 							/// add a re-tweet user
 		
 							 ///*/
-							addRTUser();
+							addRTUser(lo,lt);
 		
 						} else {
 							/// theUser.isReTweet = false;
@@ -370,7 +465,7 @@ public class TwitterPlanet extends PApplet {
 					} catch (Exception e){
 						println("retweet error: rate limited");
 					}
-					theUser.initUser(); // initializes  user and sends info to DB
+					
 		
 					/// to get a more detailed user profile
 					/// check to see if we're under the limit for twitter queries
@@ -403,9 +498,9 @@ public class TwitterPlanet extends PApplet {
 		};
 
 		/// this adds a user to the re-tweet array
-		private void addRTUser(){
-			theUser = new UserProfile();
-			RTArray.add(theUser);
+		private void addRTUser(float lo, float lt){
+			theMarker = new GPSMarker(lo,lt);
+			RTArray.add(theMarker);
 			// theUser.userID = userID;
 			// theUser.StatusID = tweetID;
 
@@ -434,7 +529,7 @@ public class TwitterPlanet extends PApplet {
 		}
 		
 		///// DETAILED QUERY /////////////////////
-		public void getUserInfo(UserProfile theUser, long newID){
+		public void getUserInfo(GPSMarker theMarker, long newID){
 			// /*
 			int tid = (int)newID;
 			String tPath = thePath + tid;
@@ -469,15 +564,15 @@ public class TwitterPlanet extends PApplet {
 				/*
 				*/
 				//
-				println("user name: " + theUser.userName);
-				println("screen name: " + theUser.screenName);
-				println("timestamp: " + theUser.createdAt);
-				println("geoCoords: " + theUser.geoCoords);
-				println("reply to ID: " + theUser.replyToID);
-				println("followers" + theUser.followersCount);
-				println("friends" + theUser.friendsCount);
-				println("favorites: " + theUser.favoritesCount);
-				println("time zone: " + theUser.timeZone);
+				println("user name: " + theMarker.userName);
+				println("screen name: " + theMarker.screenName);
+				println("timestamp: " + theMarker.createdAt);
+				println("geoCoords: " + theMarker.geoCoords);
+				println("reply to ID: " + theMarker.replyToID);
+				println("followers" + theMarker.followersCount);
+				println("friends" + theMarker.friendsCount);
+				println("favorites: " + theMarker.favoritesCount);
+				println("time zone: " + theMarker.timeZone);
 				//
 
 
@@ -580,8 +675,8 @@ public class TwitterPlanet extends PApplet {
 		// /// SET GPS MARKERS ON THE SPHERE
 		
 		// check marker position
-		for (int i = 0; i < LatLongLength; i++) {
-			theMarker[i].updateScreenPos(this, camPos);
+		for (int i = 0; i < GPSArray.size(); i++) {
+			GPSArray.get(i).updateScreenPos(this, camPos);
 		}
 		// check destroyer position
 		theDestroyer.updateScreenPos(this, camPos);
@@ -596,8 +691,8 @@ public class TwitterPlanet extends PApplet {
 		imageMode(CENTER);
 
 		// now that they're in position, draw them
-		for (int i = 0; i < LatLongLength; i++) {
-			theMarker[i].drawAsImage(this, IMG_SIZE * currZoom * 0.9f, showLabels);
+		for (int i = 0; i < GPSArray.size(); i++) {
+			GPSArray.get(i).drawAsImage(this, IMG_SIZE * currZoom * 0.9f, showLabels);
 		}
 		// draw the destroyer
 		try{
@@ -612,65 +707,11 @@ public class TwitterPlanet extends PApplet {
 		hint(ENABLE_DEPTH_TEST);
 	}
 
+	////////////////////////////////
+	///////// SET CURSOR/DESTROYER 
+	////////////////////////////////////
+
 	
-
-	// //init the location array with ip addresses from the DB
-	public void initLocations() {
-		try {
-			dbData = new JSONObject(join(loadStrings(jsonString), ""));
-			// println("results: " + result);
-			results = dbData.getJSONArray("latlong_data");
-			// total = dbData.getInt("total");
-			// / set length of arrays
-			LatLongLength = results.length();
-			// init our marker handler
-			theMarker = new GPSMarker[LatLongLength];
-			latArray = new float[results.length()];
-			longArray = new float[results.length()];
-
-			// println("LENGTH: " + results.length());
-			
-			// // let's print this mother out
-			for (int i = 0; i < LatLongLength; i++) {
-
-				String theLat = results.getJSONObject(i).getString("lat");
-				String theLong = results.getJSONObject(i).getString("long");
-				// println(results.getJSONObject(i).getString("lat"));
-				float lt = new Float(theLat);
-				float lo = new Float(theLong);
-				latArray[i] = lt;
-				longArray[i] = lo;
-				
-			}
-
-		} catch (JSONException e) {
-			println(e);
-		}
-		initGPSMarkers();
-
-	}
-////set up markers and destroyer
-	public void initGPSMarkers() {
-		
-		/// set up markers
-		for (int i = 0; i < LatLongLength; i++) {
-			// / add a new GPS marker, set its lat and long arrays
-			// / and compute its position
-			theMarker[i] = new GPSMarker(longArray[i], latArray[i]);
-			theMarker[i].computePosOnSphere(EARTH_RADIUS);
-
-		}
-		
-		//// init the destroyer
-		try {
-		theDestroyer = new Destroyer(longArray[0], latArray[0]);
-		theDestroyer.computePosOnSphere(EARTH_RADIUS);
-		
-		} catch(Exception e){
-			println(e);
-		}
-	}
-
 	public void setDestroyer() {
 		// convert cur mouse pos to lat and long
 		// map(value, low1, high1, low2, high2)
@@ -693,18 +734,18 @@ public class TwitterPlanet extends PApplet {
 		
 		
 		//// CHECK FOR INTERSECTION with other markers
-		for(int i=0; i<theMarker.length; i++){
+		for(int i=0; i<GPSArray.size(); i++){
 		// for(int i=0; i<2; i++){
 			float dlat = theDestroyer.theLat;
 			float dlong = theDestroyer.theLong;
-			float mlat = theMarker[i].theLat;
-			float mlong = theMarker[i].theLong;
+			float mlat = GPSArray.get(i).theLat;
+			float mlong = GPSArray.get(i).theLong;
 			// println("dlat " + dlat + " mlat: " + mlat);
 			// println("dlong " + dlong + " mlong: " + mlong);
 			//// check to see if the destroyer is within the range of the current lat and long
 			if (dlat >= (mlat -3) && dlat <= (mlat + 3) &&  dlong <= (mlong + 3) && dlong >= (mlong - 3)){
 				
-				theMarker[i].doHit(); //// marker hit
+				GPSArray.get(i).doHit(); //// marker hit
 			} else {
 				/// println(">>");
 			}
