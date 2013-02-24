@@ -1,3 +1,4 @@
+package src;
 /* 
  * Copyright (c) 2011 Karsten Schmidt
  * 
@@ -23,8 +24,6 @@
  * TWITTER PLANET UPDATE
  * 
  * */
-
-package src;
 
 // import TextSpawn;
 // import UserProfile;
@@ -89,6 +88,9 @@ public class TwitterPlanet extends PApplet {
 
 	/// Image size in pixels for rendering
 	private static final int IMG_SIZE = 32;
+	
+	////// FULL SCREEN HANDLER
+
 
 	/**
 	 * Main entry point to run as application
