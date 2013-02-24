@@ -1,4 +1,4 @@
-package src;
+
 /* 
  * Copyright (c) 2011 Karsten Schmidt
  * 
@@ -83,24 +83,22 @@ import twitter4j.User;
 @SuppressWarnings("serial")
 public class TwitterPlanet extends PApplet {
 
-	//Radius of our globe
-	private static final int EARTH_RADIUS = 300;
-
-	/// Image size in pixels for rendering
-	private static final int IMG_SIZE = 32;
+	
 	
 	////// FULL SCREEN HANDLER
-
-
 	/**
 	 * Main entry point to run as application
 	 */
 ///*
 	public static void main(String[] args) {
-		PApplet.main(new String[] { "src.TwitterPlanet" });
+		PApplet.main(new String[] { "--present", "TwitterPlanet" });
 	}
 	// */
+	//Radius of our globe
+	private static final int EARTH_RADIUS = 300;
 
+	/// Image size in pixels for rendering
+	private static final int IMG_SIZE = 32;
 	/// Earth texture image
 	private PImage earthTex;
 
@@ -196,9 +194,24 @@ public class TwitterPlanet extends PApplet {
 	
 	DataProfile dataProfile;
 	
+	/*
+	public void init() {
+		  /// to make a frame not displayable, you can
+		  // use frame.removeNotify()
+		  frame.removeNotify(); 
+
+		  frame.setUndecorated(true);
+
+		  // addNotify, here i am not sure if you have
+		  // to add notify again.
+		  // frame.addNotify();
+		  super.init();
+	}
+	*/
+
 	public void setup() {
-		size(1024, 768, OPENGL);
-		
+		// size(1024, 768, OPENGL);
+		size(1440, 900, OPENGL); /// have to hard code it if running a standalone
 		/// load search data
 		loadSearchData();
 
