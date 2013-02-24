@@ -142,7 +142,7 @@ public class TwitterPlanet extends PApplet {
 	String thePath = "http://api.twitter.com/1/users/show.json?user_id=";
 	// if you enter keywords here it will filter, otherwise it will sample
 	/// used barak obama because it returns a lot of results right away
-	String keywords[] = { "obama", "osama", "barak"};
+	String keywords[] = { "zombies", "werewolves", "mermen"};
 	
 	// array lists for users and re-tweeters
 	ArrayList<GPSMarker> GPSArray = new ArrayList();
@@ -196,6 +196,9 @@ public class TwitterPlanet extends PApplet {
 	
 	public void setup() {
 		size(1024, 768, OPENGL);
+		
+		/// load search data
+		loadSearchData();
 
 		// load earth texture image
 		earthTex = loadImage("../data/earth_outlines.jpg"); // ../data/earth_4096.jpg"); //
@@ -249,13 +252,27 @@ public class TwitterPlanet extends PApplet {
 	public void draw() {
 
 		
-		background(0);
+		background(165);
 
 		renderGlobe();
 
 
 
 	}
+	
+	/////////////////////////
+	///// load keywords
+	///////////////////////
+	private void loadSearchData(){
+		
+		String lines[] = loadStrings("../data/search_data.txt");
+		for (int i = 0 ; i < lines.length; i++) {
+		  println(lines[i]);
+		  String tWord = lines[i];
+		  keywords[i] = tWord;
+		}
+	}
+	
 	/////////////////////////////////////////////
 	// //init the location array 
 	///// with ip addresses from the DB
@@ -807,6 +824,14 @@ public class TwitterPlanet extends PApplet {
 			hasOsc = true;
 			println(hasOsc);
 		}
+		if(addr.indexOf("/TwitterPlanet/xy1") !=-1){ // ){
+			hasOsc = true;
+			println(hasOsc);
+		}
+		if(addr.indexOf("/TwitterPlanet/xy2") !=-1){ // ){
+			hasOsc = true;
+			println(hasOsc);
+		}
 		try{
 		  // print("### received an osc message.");
 		  // println(" typetag: "+theOscMessage.typetag())
@@ -818,7 +843,19 @@ public class TwitterPlanet extends PApplet {
 		   	} 
 		    else if(addr.equals("/1/fader2")){ 
 		    	println("v2 " + val0);
-		    } 
+		    }
+		    else if(addr.equals("/TwitterPlanet/xy1")){ 
+		    	println("good job! 1x1 " + val0);
+		    	println("1y1 " + val1);
+		    	oscX0 = val0;
+		    	oscY0 = val1;
+		    }
+		    else if(addr.equals("/TwitterPlanet/xy2")){ 
+		    	println("good job! 1x2 " + val0);
+		    	println("good job! 1y2 " + val1);
+		    	oscX1 = val0;
+		    	oscY1 = val1;
+		    }
 		    else if(addr.equals("/3/xy1")){ 
 		    	println("3x1 " + val0);
 		    	println("3y1 " + val1);

@@ -94,7 +94,7 @@ public class GPSMarker {
 	public void doHit(){
 		// tAlpha = 255;
 	    fillColor1 = 255;
-	    size1 = 27;
+	    size1 = 65;
 
 	}
 	/**
