@@ -57,6 +57,7 @@ import toxi.processing.ToxiclibsSupport;
 //twitter libraries
 import twitter4j.Status;
 //import twitter4j.StatusAdapter;
+import twitter4j.GeoLocation;
 import twitter4j.IDs;
 import twitter4j.StatusDeletionNotice;
 import twitter4j.StatusListener;
@@ -123,7 +124,7 @@ public class TwitterPlanet extends PApplet {
 	JSONObject dbData;
 	
 	////// Twitter Params
-	int tweetLimit = 30;
+	int tweetLimit = 30; // 6; // upper limit for tweets
 	int curTweetNum = 0;
 	
 	/// JSON STUFF FOR TWITTER
@@ -194,11 +195,11 @@ public class TwitterPlanet extends PApplet {
 	DataProfile dataProfile;
 	
 	public void setup() {
-		size(800, 600, OPENGL);
+		size(1024, 768, OPENGL);
 
 		// load earth texture image
-		// earthTex = loadImage("../data/earth_4096.jpg"); // earth_outlines.png");
-		earthTex = loadImage("../data/earth_outlines.png");
+		earthTex = loadImage("../data/earth_outlines.jpg"); // ../data/earth_4096.jpg"); //
+		// earthTex = loadImage("../data/earth_outlines.png");
 
 		// build a sphere mesh with texture coordinates
 		// sphere resolution set to 36 vertices
@@ -211,7 +212,7 @@ public class TwitterPlanet extends PApplet {
 		gfx = new ToxiclibsSupport(this);
 		
 		/// add the OSC listener object
-		// oscP5 = new OscP5(this,8000);
+		oscP5 = new OscP5(this,8000);
 
 		textFont(createFont("SansSerif", 10));
 		// initPoly();
@@ -344,7 +345,7 @@ public class TwitterPlanet extends PApplet {
 		// STATUS LISTENER
 		StatusListener listener = new StatusListener() {
 			public void onStatus(Status status) {
-				if(curTweetNum <tweetLimit){
+				if(curTweetNum < tweetLimit){
 					
 
 					// println("@" + status.getUser().getScreenName() + " - " +
@@ -360,10 +361,10 @@ public class TwitterPlanet extends PApplet {
 					if(status.getUser().isGeoEnabled()){
 						
 						status.getGeoLocation();
-						println("GEOLOC: " + status.getGeoLocation());
+						// println("GEOLOC: " + status.getGeoLocation());
 
 					} else {
-						println("NO GEOLOC: " + theMarker.theLocation);
+						// println("NO GEOLOC: " + theMarker.theLocation);
 					//// find random lat and long
 						int tempLoc = (int)random(LatLongLength);
 						//// populate!
@@ -377,11 +378,19 @@ public class TwitterPlanet extends PApplet {
 						}
 						
 					}
+			        if (status.getGeoLocation() != null) {
+			        	
+			            GeoLocation alocation =status.getGeoLocation();
+			            String aloc = alocation.toString();
+			            println("REAL GEO DATA: " + aloc);
+			            
+			        }
 					
 					theMarker = new GPSMarker(lo,lt);
 					/// theMarker = new GPSMarker(longArray[i], latArray[i]);
 					theMarker.computePosOnSphere(EARTH_RADIUS);
 					GPSArray.add(theMarker);
+					theMarker.doHit();
 					/// add all data to user profile
 					theMarker.userID = status.getUser().getId();
 					theMarker.StatusID = status.getId();
@@ -538,31 +547,7 @@ public class TwitterPlanet extends PApplet {
 				dbData = new JSONObject(join(loadStrings(tPath), ""));
 				// results = dbData.getJSONArray("id");
 				// println(results);
-				println(dbData);
-				/// add data
-				/// most of this we can get from the stream
-				/*
-
-				theUser.userName = dbData.getString("name");
-				theUser.screenName = dbData.getString("screen_name");
-
-				theUser.tweetText = dbData.getString("text");
-				theUser.createdAt = dbData.getString("created_at");
-				theUser.timeZone = dbData.getString("time_zone");
-				theUser.followersCount = dbData.getString("followers_count");
-
-				theUser.friendsCount = dbData.getString("friends_count");
-				theUser.favoritesCount = dbData.getString("favorites_count");
-				theUser.geoCoords = dbData.getString("coordinages");
-				theUser.replyToID = dbData.getString("in_reply_to_user_id");
-
-				if(dbData.getString("retweeted") == "true"){
-					theUser.reTweeted = "true";
-				} else {
-					theUser.reTweeted = "false";
-				};
-				/*
-				*/
+				
 				//
 				println("user name: " + theMarker.userName);
 				println("screen name: " + theMarker.screenName);
@@ -595,6 +580,8 @@ public class TwitterPlanet extends PApplet {
 		// each frame we only approach that rotation by 25% (0.25 value)
 		
 		lights();
+		ambientLight(255, 255, 255);
+		specular(255, 255, 255);
 		// store default 2D coordinate system
 		pushMatrix();
 		// switch to 3D coordinate system and rotate view based on mouse
@@ -612,9 +599,13 @@ public class TwitterPlanet extends PApplet {
 		///// CHECK FOR OSC INPUT TO SET CAMERA
 		} else if (hasOsc == true) {
 			/// map(value, low1, high1, low2, high2)
-			///*
-			float oscX = map(oscX0, 0, 1, 0, 1024); ///// maps our input to 800x600
-			float oscY = map(oscY0, 0, 1, 0, 7); ///// 
+			/*
+			 * oscX0 = val0;
+		    	oscY0 = val1;
+		    */
+			println("rotate dammit!");
+			float oscX = map(oscX0, 0, 1, 0, 1024); ///// maps our input to 1024
+			float oscY = map(oscY0, 0, 1, 0, 768); ///// 
 			camRot.interpolateToSelf(new Vec3D(oscY * 0.01f, oscX * 0.01f, 0),0.25f / currZoom);
 			theCamX = camRot.x;
 			theCamY = camRot.y;
@@ -670,6 +661,8 @@ public class TwitterPlanet extends PApplet {
 		textureMode(NORMAL);
 		// draw earth
 		gfx.texturedMesh(globe, earthTex, true);
+		
+		
 
 		////////////////////////////////////////
 		// /// SET GPS MARKERS ON THE SPHERE
@@ -702,9 +695,36 @@ public class TwitterPlanet extends PApplet {
 		}
 		setDestroyer();
 		////////////////////////////////////////
-		
 		// restore (default) depth testing
 		hint(ENABLE_DEPTH_TEST);
+	}
+	
+	//// draw lines between points ////////
+	public void drawLines(){
+		float prevX1;
+		float prevY1;
+		float prevX2;
+		float prevY2;
+		for (int i = 0; i < GPSArray.size() - 1; i++) {
+			GPSMarker tMark = GPSArray.get(i);
+			GPSMarker tMark2 = GPSArray.get(i + 1);
+			
+			prevX1 = tMark.theLat;
+			prevY1 = tMark.theLong;
+			prevX2 = tMark2.theLat;
+			prevY2 = tMark2.theLong;
+			
+			stroke(255);
+			strokeWeight(5);
+			line(prevX1, prevY1, prevX2, prevY2);
+
+		}
+		/*
+		 * {"lat":"33.590897","long":"-112.3311","date":"2011-12-08 12:25:57"},
+{"lat":"48.199997","long":"16.3667","date":"2011-12-08 12:26:12"},
+*/
+		line(new Float(33.590897), new Float(-112.3311), new Float(48.199997), new Float(16.3667));
+		
 	}
 
 	////////////////////////////////
@@ -779,8 +799,16 @@ public class TwitterPlanet extends PApplet {
 			hasOsc = true;
 			println(hasOsc);
 		}
+		if(addr.indexOf("/1/xy1") !=-1){ // ){
+			hasOsc = true;
+			println(hasOsc);
+		}
+		if(addr.indexOf("/1/xy2") !=-1){ // ){
+			hasOsc = true;
+			println(hasOsc);
+		}
 		try{
-		  print("### received an osc message.");
+		  // print("### received an osc message.");
 		  // println(" typetag: "+theOscMessage.typetag())
 		 println("tag type: "+theOscMessage.typetag());
 		 println("addr type: " + theOscMessage.addrPattern()); // it was lowercase in the documentation
@@ -796,6 +824,18 @@ public class TwitterPlanet extends PApplet {
 		    	println("3y1 " + val1);
 		    	oscX0 = val0;
 		    	oscY0 = val1;
+		    }
+		    else if(addr.equals("/1/xy1")){ 
+		    	println("good job! 1x1 " + val0);
+		    	println("1y1 " + val1);
+		    	oscX0 = val0;
+		    	oscY0 = val1;
+		    }
+		    else if(addr.equals("/1/xy2")){ 
+		    	println("good job! 1x2 " + val0);
+		    	println("good job! 1y2 " + val1);
+		    	oscX1 = val0;
+		    	oscY1 = val1;
 		    }
 		    else if(addr.equals("/3/xy2")){ 
 		    	println("3x2 " + val0);
@@ -856,7 +896,7 @@ public class TwitterPlanet extends PApplet {
 		}
 		/// this does nothing
 		if (key == 'd') {
-		println("I am an update and I matter");
+
 			
 		}
 		if (key == 'f') {

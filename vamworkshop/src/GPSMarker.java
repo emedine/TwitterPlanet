@@ -63,7 +63,7 @@ public class GPSMarker {
 		theLong = tLong;
 		theLat = tLat;
 		
-		pApp.println(theLong);
+		/// pApp.println(theLong);
 		// set the gps data
 		this.gps = new Vec2D(theLong, theLat);
 
@@ -95,21 +95,7 @@ public class GPSMarker {
 		// tAlpha = 255;
 	    fillColor1 = 255;
 	    size1 = 27;
-	    
-	    /// do sound
-	    try{
-	    	
-	    	//// normalize the range of notes  between 0 and -180
-	    	int SoundArray = midiControl.SoundArray.length;
-			float tNote = pApp.map(theLong, -180f, 150f, 0f, new Float(SoundArray));
-			int iNote = (int)tNote;
-			pApp.println("longhit: " + theLong + " " + iNote + " " + iNote);
-	    	midiControl.sendMultiNote(iNote);
-	    	// theAudio.playAudio();
-	    	
-	    } catch (Exception e){
-	    	pApp.println("no audio data");
-	    }
+
 	}
 	/**
 	 * Draws image at computed position in space.
