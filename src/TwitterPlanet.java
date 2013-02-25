@@ -202,6 +202,7 @@ public class TwitterPlanet extends PApplet {
 	OscP5 oscP5;
 	String oscMess;
 	boolean hasOsc;
+	boolean doCursor;
 	float oscX0;
 	float oscY0;
 	float oscX1;
@@ -697,9 +698,9 @@ public class TwitterPlanet extends PApplet {
 			/// map(value, low1, high1, low2, high2)
 			
 			println("rotate dammit!");
-			float oscX = map(oscX0, 0, 1, 0, screenWidth); ///// maps our input to 1024
+			float newX = map(oscX0, 0, 1, 0, screenWidth); ///// maps our input to 1024
 			float oscY = map(oscY0, 0, 1, 0, screenHeight); ///// 
-			camRot.interpolateToSelf(new Vec3D(oscY * 0.01f, oscX * 0.01f, 0),0.25f / currZoom);
+			camRot.interpolateToSelf(new Vec3D(oscY * 0.01f, newX * 0.01f, 0),0.25f / currZoom);
 			theCamX = camRot.x;
 			theCamY = camRot.y;
 			// rotateX(camRot.x);
@@ -708,26 +709,7 @@ public class TwitterPlanet extends PApplet {
 			//*/
 			
 		} 
-		
-		/// check to see if we've moved at all
-		// for audio outputs
-		if(theOldCamX == theCamX && theOldCamY == theCamY){
-			isMoving = false;
-			try{
-			
-			/// saw.setAmp(0f);
-			} catch (Exception e){
-				// println("can't set amplitude: " + e);
-			}
-		} else {
-			isMoving = true;
-			try{
 
-			} catch (Exception e){
-				// println("can't set amplitude: " + e);
-			}
-			
-		}
 		theOldCamX = theCamX;
 		theOldCamY = theCamY;
 		
@@ -827,21 +809,40 @@ public class TwitterPlanet extends PApplet {
 		// map(value, low1, high1, low2, high2)
 		
 		
-		if (hasOsc == true){
+		if (doCursor == true){
 			// theLat = map(oscY1, 1, 0, 0, 90);
 			// theLong = map(oscX1, 0, 1, -180, 180);
-			theLat = map(oscY1, 0, screenWidth, 0, 90);
-			theLong = map(oscX1, 0, screenHeight, -180, 180);
+			
+			/// change osc values to mouse-parsed
+			float newOscY = map(oscY1, 0, 1, 0, screenHeight);
+			float newOscX = map(oscX1, 0, 1, 0, screenWidth);
+	    	
+			/// change mouse-style to 360 degree values
+			theLat = map(newOscY, 0, screenHeight, 0, 90);
+			theLong = map(newOscX, 0, screenWidth, -180, 180);
+			
+			/*
+	    	println("Do cursor Y " + oscY1);
+	    	println("Do cursor X " + oscX1);
+	    	
+	    	println("Do LONG Y " + theLong);
+	    	println("Do LAT X " + theLat);
+	    	*/
+
 		} else {
 			// theLat = map(mouseY, 600, 0, 0, 90);
 			// theLong = map(mouseX, 200, 800, -180, 180);
 		
 		}
 		if (!mousePressed) {
-			theLat = map(mouseY, 0, screenWidth, 0, 90);
-			theLong = map(mouseX, 0, screenHeight, -180, 180);
+			// println("Do mouse Y " + mouseY);
+	    	// println("Do cursor X " + mouseX);
+			// theLat = map(mouseY, 0, screenHeight, 0, 90);
+			// theLong = map(mouseX, 0, screenWidth, -180, 180);
 		}
-		theDestroyer.setSpherePosition(theLong, theLat); //sends lat and long converted from default
+		doCursor = false;
+		
+		theDestroyer.setSpherePosition(theLong, theLat); 
 		theDestroyer.computePosOnSphere(EARTH_RADIUS);
 
 		//// CHECK FOR INTERSECTION with other markers
@@ -944,7 +945,7 @@ public class TwitterPlanet extends PApplet {
 			    else if(addr.equals("/TwitterPlanet/xy2")){ 
 			    	float val2 = theOscMessage.get(0).floatValue();
 					float val3 = theOscMessage.get(1).floatValue();
-			    	println("Do cursor " + val2);
+			    	doCursor = true;
 			    	oscX1 = new Float(val2);
 			    	oscY1 = new Float(val3);
 			    }
