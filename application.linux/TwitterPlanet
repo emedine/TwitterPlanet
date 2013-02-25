@@ -1,0 +1,4 @@
+#!/bin/sh
+
+APPDIR=$(dirname "$0")
+java  -Djava.library.path="$APPDIR" -cp "$APPDIR/lib/TwitterPlanet.jar:$APPDIR/lib/core.jar:$APPDIR/lib/flickrapi-1.2.jar:$APPDIR/lib/toxiclibs_p5.jar:$APPDIR/lib/toxiclibscore.jar:$APPDIR/lib/colorutils.jar:$APPDIR/lib/gluegen-rt.jar:$APPDIR/lib/jogl.jar:$APPDIR/lib/opengl.jar:$APPDIR/lib/json.jar:$APPDIR/lib/oscP5.jar:$APPDIR/lib/minim.jar:$APPDIR/lib/jsminim.jar:$APPDIR/lib/minim-spi.jar:$APPDIR/lib/mp3spi1.9.4.jar:$APPDIR/lib/tritonus_aos.jar:$APPDIR/lib/tritonus_share.jar:$APPDIR/lib/jl1.0.jar:$APPDIR/lib/rwmidi.jar:$APPDIR/lib/twitter4j-async-2.2.6-SNAPSHOT.jar:$APPDIR/lib/twitter4j-core-2.2.5-SNAPSHOT.jar:$APPDIR/lib/twitter4j-core-2.2.6-SNAPSHOT.jar:$APPDIR/lib/twitter4j-examples-2.2.6-SNAPSHOT.jar:$APPDIR/lib/twitter4j-media-support-2.2.6-SNAPSHOT.jar:$APPDIR/lib/twitter4j-stream-2.2.5-SNAPSHOT.jar:$APPDIR/lib/twitter4j-stream-2.2.6-SNAPSHOT.jar"TwitterPlanet

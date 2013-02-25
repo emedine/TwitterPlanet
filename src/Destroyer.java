@@ -1,6 +1,7 @@
 // package src;
 
 import processing.core.PApplet;
+import processing.core.PShape;
 import toxi.geom.Vec2D;
 import toxi.geom.Vec3D;
 import toxi.math.MathUtils;
@@ -10,16 +11,18 @@ public class Destroyer {
 
 	protected Vec3D pos;
 	protected Vec2D screenPos = new Vec2D();
+	protected boolean showDest = true;
 	protected boolean isVisible;
 	
 	public float theLong;
 	public float theLat;
 	public float theRotation = 0;
-	//
-	PolygonBuilder thePoly;
+
 	// 
 	DataProfile theDataProfile;
 	PApplet pApp;
+	
+
 
 	// / pass the lat and long into the GPS marker
 	public Destroyer(float tLong, float tLat) {
@@ -28,9 +31,9 @@ public class Destroyer {
 		//theLong = tLong;
 		// theLat = tLat;
 		this.gps = new Vec2D(tLong, tLat);
-		thePoly = new PolygonBuilder();
 		theDataProfile = theDataProfile.getInstance();
 		pApp = theDataProfile.pApp;
+
 
 	}
 
@@ -55,17 +58,76 @@ public class Destroyer {
            true, show in front
 	 */
 	public void drawAsImage(PApplet app, float size, boolean showLabel) {
+		
+		/*
 		  float rnd1 = pApp.random(1);
 		  float rnd2 = pApp.random(1);
 		  float rnd3 = pApp.random(1);
-		  int fillColor = pApp.color((int) (rnd1*125), (rnd2*125),(rnd3*255)); 
+		 
+		 //  int fillColor = pApp.color((int) (rnd1*125), (rnd2*125),(rnd3*255)); 
 		  int theAlpha = Math.round(rnd2*255);
+		   */
 		  if (isVisible) {
-			  thePoly.doPolygon(app, 5, screenPos.x, screenPos.y, 12, 12, theAlpha, fillColor);
+			  
+			  /*
+			  pApp.fill(255);
+			  pApp.shape(crossHair, screenPos.x, screenPos.y, 30, 30);
+			  pApp.text(theLong, screenPos.x + 30, screenPos.y);
+			  pApp.text(" " + theLat, screenPos.x + 30, screenPos.y + 10);
+			  */
+			  //*
+			  
+			  // show actual pos
+			  /*
+			  pApp.fill(255,0,0);
+			  pApp.rect(screenPos.x, screenPos.y, 10,10);
+			  */
+			  int lineWidth = 30;
+			  int tSpacing = 5;
+			  pApp.fill(255);
+			/// do numbers
+			  pApp.text(theLong, screenPos.x + 5, screenPos.y + 20);
+			  pApp.text(" " + theLat, screenPos.x + 5, screenPos.y + 30);
+			  
+			  pApp.fill(0);
+			  pApp.stroke(255);
+			  pApp.strokeWeight(1);
+				
+				/// trim x
+				pApp.line(screenPos.x, screenPos.y - tSpacing, screenPos.x + lineWidth/2, screenPos.y -tSpacing);
+				pApp.line(screenPos.x, screenPos.y + tSpacing, screenPos.x + lineWidth/2, screenPos.y + tSpacing);
+				pApp.ellipse(screenPos.x, screenPos.y, lineWidth/2, lineWidth/2);
+				
+				/// crosshair
+				pApp.fill(0,0,0,0);
+				pApp.stroke(255);
+				// do horiz
+				pApp.line(screenPos.x-lineWidth/2, screenPos.y, screenPos.x + lineWidth, screenPos.y);
+				/// do vert
+				pApp.line(screenPos.x, screenPos.y-lineWidth/2, screenPos.x, screenPos.y + lineWidth);
+				// do circle
+				// pApp.ellipse(screenPos.x-lineWidth, screenPos.y-lineWidth, lineWidth/2, lineWidth/2);
+				// pApp.ellipse(screenPos.x-lineWidth/2, screenPos.y-lineWidth/2, lineWidth/2, lineWidth/2);
+				pApp.ellipse(screenPos.x, screenPos.y, lineWidth, lineWidth);
+				//*/
+				
+				
+			    // thePoly.doPolygon(app, 5, screenPos.x, screenPos.y, 12, 12, theAlpha, fillColor);
 		  } else {
-			  thePoly.doPolygon(app, 3, screenPos.x, screenPos.y, 8, 8, 125, fillColor);
+			  // thePoly.doPolygon(app, 3, screenPos.x, screenPos.y, 8, 8, 125, fillColor);
 		  }
 		 /// thePoly.rotate(pApp.radians(theRotation));
+	}
+	
+	//// toggles visibility from the interface
+	public void toggleVisibility(){
+		if(showDest){
+			showDest = false;
+		} else if(!showDest){
+			showDest = true;
+			
+		}
+		
 	}
 
 	public void setSpherePosition(float tLong, float tLat){
@@ -79,6 +141,11 @@ public class Destroyer {
 		screenPos.set(app.screenX(pos.x, pos.y, pos.z),app.screenY(pos.x, pos.y, pos.z));
 
 		float dot = pos.getNormalized().dot(camPos);
-		isVisible = dot > 0.86;
+		if(dot > 0.6 && showDest == true){
+			isVisible = true;
+		} else {
+			isVisible = false;
+		}
+		// isVisible = dot > 0.6;
 	}
 }

@@ -16,11 +16,21 @@ public class GPSMarker {
 	public float theLong;
 	public float theLat;
 	
-	int fillColor1;
-	int fillColor2;
+	/// temp colors
+	int fillColor1 = 255;
+	int fillColor2 = 0;
+	int fillColor3 = 0;
+	
+	// set colors
+	int fillColorR = 255;
+	int fillColorG = 0;
+	int fillColorB = 0;
+	
 	
 	int size1 = 12;
 	int size2 = 6;
+	
+	int setSize = 12;
 	
 	///// TWITTER PROFILE DATA
 	/// USER DATA
@@ -93,7 +103,14 @@ public class GPSMarker {
 	}
 	public void doHit(){
 		// tAlpha = 255;
-	    fillColor1 = 255;
+	    fillColor2 = 255;
+	    size1 = 45;
+
+	}
+	public void doInitSpawn(){
+		// tAlpha = 255;
+	    fillColor2 = 255;
+	    fillColor3 = 255;
 	    size1 = 65;
 
 	}
@@ -110,23 +127,45 @@ public class GPSMarker {
 	public void drawAsImage(PApplet app, float size, boolean showLabel) {
 		
 		/// this resets the color gradually if the marker has been hit
-		if(fillColor1 <= 0){
-			fillColor1 = 0;
-			size1 = 12;
-		} else {
+		if(fillColor1 <= fillColorR){
+			fillColor1 +=20;
+			// size1 = 12;
+		} else if (fillColor1 >= fillColorR){
 			fillColor1 -=20;
-			size1 -=1;
+			// size1 -=1;
 			// tAlpha ++;
 			
+		}
+		if(fillColor2 <= fillColorG){
+			fillColor2 +=20;
+			
+		} else if(fillColor2 >= fillColorG){
+			fillColor2 -=20;
+			// size1 -=1;
+
+		}
+		if(fillColor3 <= fillColorB){
+			fillColor3 += 20;
+
+		} else if(fillColor3 >= fillColorB){
+			fillColor3 -=20;
+			//size1 -=1;
+			// tAlpha ++;
+			
+		}
+		if(size1 >= setSize){
+			size1 -= 1;
+		} else {
+			size1 = setSize;
 		}
 		if (isVisible) {
 			// fillColor1 = color((int) (rnd1*255), (rnd2*255),(rnd*255)); // color((int) (rnd1*255), (rnd2*255),(rnd*255)); 
 			/// fillColor1 = int((int)(rnd1*255));
 			
 			// app.noStroke();
-			app.fill(255, fillColor1, 0, tAlpha-75);
+			app.fill(fillColor1, fillColor2, fillColor3, tAlpha-75);
 			app.ellipse(screenPos.x, screenPos.y, size1, size1);
-			app.fill(255, fillColor1, 0, tAlpha);
+			app.fill(fillColor1, fillColor2, fillColor3, tAlpha);
 			app.ellipse(screenPos.x, screenPos.y, size2, size2);
 		}
 

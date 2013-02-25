@@ -43,6 +43,7 @@ import rwmidi.MidiOutput;
 
 /// processing core libraries
 import processing.core.PApplet;
+import processing.core.PFont;
 import processing.core.PGraphics;
 import processing.core.PImage;
 
@@ -90,9 +91,20 @@ public class TwitterPlanet extends PApplet {
 	 * Main entry point to run as application
 	 */
 ///*
+	
+	/*
+	int screenWidth = 1440;
+	int screenHeight = 900;
+	*/
+	int screenWidth = 1024;
+	int screenHeight = 768;
+	
 	public static void main(String[] args) {
-		PApplet.main(new String[] { "--present", "TwitterPlanet" });
+		// PApplet.main(new String[] { "--present", "TwitterPlanet" });
+		PApplet.main(new String[] {"TwitterPlanet" });
 	}
+	/*/
+	
 	// */
 	//Radius of our globe
 	private static final int EARTH_RADIUS = 300;
@@ -156,6 +168,17 @@ public class TwitterPlanet extends PApplet {
 	TwitterStream twitter = new TwitterStreamFactory().getInstance();
 	Twitter twitterF = new TwitterFactory().getInstance();
 	
+	// TEXT POSITIONING
+	int curDataX = 100;
+	int curDataY = 100;
+	int curDataBoxW = 200;
+	int curDataBoxH = 200;
+	int curDataMargin = 10;
+	
+	///// FONTS
+	PFont SanSerif = createFont("Arial",12, true); /// normal fonts
+	PFont pfont = createFont("Arial",10, true); // use true/false for smooth/no-smooth for Control fonts
+	
 	
 	// / lat and long arrays
 	/// these are placeholders
@@ -180,7 +203,7 @@ public class TwitterPlanet extends PApplet {
 	/// MIDI objects
 	MidiControl midiControl;
 	
-	// destroyer uses polygon builder
+	// destroyer
 	Destroyer theDestroyer;
 	boolean doAudio = false;
 	// destroyer lata and long
@@ -211,7 +234,9 @@ public class TwitterPlanet extends PApplet {
 
 	public void setup() {
 		// size(1024, 768, OPENGL);
-		size(1440, 900, OPENGL); /// have to hard code it if running a standalone
+		size(screenWidth, screenHeight, OPENGL); /// have to hard code it if running a standalone
+		
+		smooth();
 		/// load search data
 		loadSearchData();
 
@@ -232,7 +257,6 @@ public class TwitterPlanet extends PApplet {
 		/// add the OSC listener object
 		oscP5 = new OscP5(this,8000);
 
-		textFont(createFont("SansSerif", 10));
 		// initPoly();
 		
 		// init our instance of the data profile
@@ -422,7 +446,7 @@ public class TwitterPlanet extends PApplet {
 					/// theMarker = new GPSMarker(longArray[i], latArray[i]);
 					theMarker.computePosOnSphere(EARTH_RADIUS);
 					GPSArray.add(theMarker);
-					theMarker.doHit();
+					theMarker.doInitSpawn();
 					/// add all data to user profile
 					theMarker.userID = status.getUser().getId();
 					theMarker.StatusID = status.getId();
@@ -604,7 +628,7 @@ public class TwitterPlanet extends PApplet {
 
 
 	///////////////////////////////
-	/// this does the globe render
+	/// GLOBE RENDERING
 	////////////////////////////////
 	private void renderGlobe(){
 		// smoothly interpolate camera rotation
@@ -612,8 +636,8 @@ public class TwitterPlanet extends PApplet {
 		// each frame we only approach that rotation by 25% (0.25 value)
 		
 		lights();
-		ambientLight(255, 255, 255);
-		specular(255, 255, 255);
+		ambientLight(255, 0, 0);
+		specular(255, 0, 0);
 		// store default 2D coordinate system
 		pushMatrix();
 		// switch to 3D coordinate system and rotate view based on mouse
@@ -751,10 +775,7 @@ public class TwitterPlanet extends PApplet {
 			line(prevX1, prevY1, prevX2, prevY2);
 
 		}
-		/*
-		 * {"lat":"33.590897","long":"-112.3311","date":"2011-12-08 12:25:57"},
-{"lat":"48.199997","long":"16.3667","date":"2011-12-08 12:26:12"},
-*/
+
 		line(new Float(33.590897), new Float(-112.3311), new Float(48.199997), new Float(16.3667));
 		
 	}
@@ -770,16 +791,25 @@ public class TwitterPlanet extends PApplet {
 		
 		
 		if (hasOsc == true){
+			/*
 			theLat = map(oscY1, 1, 0, 0, 90);
 			theLong = map(oscX1, 0, 1, -180, 180);
+			*/
+			theLat = map(oscX1, 0, screenWidth, 0, 90);
+			theLong = map(oscY1, 0, screenHeight, -180, 0);
 		} else {
 			// theLat = map(mouseY, 600, 0, 0, 90);
 			// theLong = map(mouseX, 200, 800, -180, 180);
 		
 		}
-		if (!mousePressed) {
+		if (!mousePressed && !hasOsc) {
+			theLat = map(mouseY, 0, screenWidth, 0, 90);
+			theLong = map(mouseX, 0, screenHeight, -180, 0);
+			/*
+			 * old positioning
 			theLat = map(mouseY, 0, 1024, 0, 90);
 			theLong = map(mouseX, 0, 768, -180, 180);
+			*/
 		}
 		theDestroyer.setSpherePosition(theLong, theLat); //sends lat and long converted from default
 		theDestroyer.computePosOnSphere(EARTH_RADIUS);
@@ -795,9 +825,10 @@ public class TwitterPlanet extends PApplet {
 			// println("dlat " + dlat + " mlat: " + mlat);
 			// println("dlong " + dlong + " mlong: " + mlong);
 			//// check to see if the destroyer is within the range of the current lat and long
-			if (dlat >= (mlat -3) && dlat <= (mlat + 3) &&  dlong <= (mlong + 3) && dlong >= (mlong - 3)){
-				
-				GPSArray.get(i).doHit(); //// marker hit
+			if (dlat >= (mlat -1) && dlat <= (mlat + 1) &&  dlong <= (mlong + 1) && dlong >= (mlong - 1)){
+				GPSMarker tMark = GPSArray.get(i);
+				tMark.doHit(); //// marker hit
+				doTextReadout(tMark);
 			} else {
 				/// println(">>");
 			}
@@ -806,39 +837,71 @@ public class TwitterPlanet extends PApplet {
 
 	}
 
+	private void doTextReadout(GPSMarker tMark){
+		/// showing data header
+		String theDate = tMark.createdAt;
+		/*
+		String[] tDate = new String[3];
+		tDate = theDate.split("-");
+		String tDay = tDate[2];
+		String tMonth = tDate[1];
+		String tYear = tDate[0];
+		
+		/// String tDay, String tMonth, String tYear
+		String newDate = doParseDate.parseDate(tDay, tMonth, tYear);
+*/
+
+	    // gameNames[gameID] +
+		String theName = tMark.userName;
+		String theText = tMark.tweetText;
+		String theLocation = tMark.theLocation;
+	    //// showing data
+		String curData = "";
+	    curData += theName;
+	    curData += "\n" + theLocation;
+	    curData += "\n";
+	    curData += "\n" + theText;
+	    // text(curDataHeader, curDataX + (showingDataMarginX *10), curDataY + showingDataMarginY);
+	    textFont(SanSerif);
+	    // textSize(12);
+	    fill(0);
+	    rect(curDataX, curDataY, curDataBoxW, curDataBoxH);
+	    fill(255);
+	    text(curData, curDataX +curDataMargin, curDataY + curDataMargin, curDataBoxW - curDataMargin, curDataBoxH);
+		
+	}
 	/////////////////////////////////
 	//////// OSC INPUT //////////////
 	/////////////////////////////////
+	/*
+	void oscEvent(OscMessage theOscMessage) {
+	 if(theOscMessage.typetag().equals("i")) {
+	      // checking both, the address pattern and the typetag, 
+	      // guarantees safe value parsing and data transfer.
+	      println("got a /test message with typetag i (int)");
+	      // if the value at index 0 is not of type int, oscP5 will thrown
+	      // an error message of type java.lang.reflect.InvocationTargetException
+	      int a = theOscMessage.get(0).intValue();
+	      println("value at index 0 (int expected) : "+a);
+	 	}
+	}
+	*/
+	
+	//*
 	public void oscEvent(OscMessage theOscMessage) {
-		  /* print the address pattern of the received OscMessage */
+		 // print the address pattern of the received OscMessage
 		String addr = theOscMessage.addrPattern();
-		/// set up floats for the 2 value depths of the input
-		float val0 = theOscMessage.get(0).floatValue();
-		float val1 = theOscMessage.get(1).floatValue();
-		if(addr.indexOf("/3/xy1") !=-1){ // ){
-			hasOsc = true;
-			println(hasOsc);
-		}
-		if(addr.indexOf("/3/xy2") !=-1){ // ){
-			hasOsc = true;
-			println(hasOsc);
-		}
-		if(addr.indexOf("/3/xy1") !=-1){ // ){
-			hasOsc = true;
-			println(hasOsc);
-		}
-		if(addr.indexOf("/3/xy2") !=-1){ // ){
-			hasOsc = true;
-			println(hasOsc);
-		}
-		if(addr.indexOf("/1/xy1") !=-1){ // ){
-			hasOsc = true;
-			println(hasOsc);
-		}
-		if(addr.indexOf("/1/xy2") !=-1){ // ){
-			hasOsc = true;
-			println(hasOsc);
-		}
+	    
+		
+	
+	   
+	    print("### received an osc message.");
+		println("tag type: "+theOscMessage.typetag());
+		println("addr type: " + theOscMessage.addrPattern()); // it was lowercase in the documentation
+		
+		/// we have to check for init OSC values
+		/// so the mouse doesn't override it on 
+		/// globe and cursor postion
 		if(addr.indexOf("/TwitterPlanet/xy1") !=-1){ // ){
 			hasOsc = true;
 			println(hasOsc);
@@ -847,84 +910,94 @@ public class TwitterPlanet extends PApplet {
 			hasOsc = true;
 			println(hasOsc);
 		}
-		try{
-		  // print("### received an osc message.");
-		  // println(" typetag: "+theOscMessage.typetag())
-		 println("tag type: "+theOscMessage.typetag());
-		 println("addr type: " + theOscMessage.addrPattern()); // it was lowercase in the documentation
-		 // println(" VALUE 0: "+theOscMessage.get(0).floatValue());
-		   if(addr.equals("/1/fader1")){ 
-			   println("v1 " + val0);
-		   	} 
-		    else if(addr.equals("/1/fader2")){ 
-		    	println("v2 " + val0);
-		    }
-		    else if(addr.equals("/TwitterPlanet/xy1")){ 
-		    	println("good job! 1x1 " + val0);
-		    	println("1y1 " + val1);
-		    	oscX0 = val0;
-		    	oscY0 = val1;
-		    }
-		    else if(addr.equals("/TwitterPlanet/xy2")){ 
-		    	println("good job! 1x2 " + val0);
-		    	println("good job! 1y2 " + val1);
-		    	oscX1 = val0;
-		    	oscY1 = val1;
-		    }
-		    else if(addr.equals("/3/xy1")){ 
-		    	println("3x1 " + val0);
-		    	println("3y1 " + val1);
-		    	oscX0 = val0;
-		    	oscY0 = val1;
-		    }
-		    else if(addr.equals("/1/xy1")){ 
-		    	println("good job! 1x1 " + val0);
-		    	println("1y1 " + val1);
-		    	oscX0 = val0;
-		    	oscY0 = val1;
-		    }
-		    else if(addr.equals("/1/xy2")){ 
-		    	println("good job! 1x2 " + val0);
-		    	println("good job! 1y2 " + val1);
-		    	oscX1 = val0;
-		    	oscY1 = val1;
-		    }
-		    else if(addr.equals("/3/xy2")){ 
-		    	println("3x2 " + val0);
-		    	println("312 " + val1);
-		    	oscX1 = val0;
-		    	oscY1 = val1;
-		    }
-		    else if(addr.equals("/1/fader3")){ 
-		    	println("v3 " + val0);
-		    }
-		    else if(addr.equals("/1/fader4")){ 
-		    	println("v4 " + val0);
-		    }
-		    else if(addr.equals("/1/fader5")){ 
-		    	//v_fader5 = val; 
-		    }
-		    else if(addr.equals("/1/toggle1")){ 
-		    	
-		    }
-		    else if(addr.equals("/1/toggle2")){ 
-		    	
-		    }
-		    else if(addr.equals("/1/toggle3")){ 
-		    	
-		    }
-		    else if(addr.equals("/1/toggle4")){ 
-		    	
-		    }
-		} catch (Exception e){
-			println(" osc error: " + e);
+		
+		if(theOscMessage.checkTypetag("i")) {
+			 if(addr.equals("/TwitterPlanet/fader1")){ 
+			   int valI = theOscMessage.get(0).intValue();
+			   // targetZoom = max(targetZoom - 0.1f, 0.5f);
+			   // targetZoom = min(targetZoom + 0.1f, 1.9f);
+			   // float z = new Float(str0);
+			   println("DO ZOOM " + addr + " " + valI);
+			   // targetZoom = map(z, 0,1,0.5f, 1.9f);
+			   
+			 } 
 		}
-		  
-		  
+
+		 
+		/// check for FLOATS
+		/// thanks stupid oscP5
+		if(theOscMessage.checkTypetag("ff")) {
+			float val0 = theOscMessage.get(0).floatValue();
+			float val1 = theOscMessage.get(1).floatValue();
+			/// set up strings for the 2 value depths of the input
+			println("FF type: " + val0 + " " + val1);
+			try {
+			   if(addr.equals("/TwitterPlanet/xy1")){ 
+			    	println("good job! /TwitterPlanet/xy1 " + val0);
+			    	oscX0 = new Float(val0);
+			    	oscY0 = new Float(val1);
+			    }
+			    else if(addr.equals("/TwitterPlanet/xy2")){ 
+			    	println("good job! /TwitterPlanet/xy2 " + val1);
+			    	oscX1 = new Float(val0);
+			    	oscY1 = new Float(val1);
+			    }
+			} catch (Exception e){
+				println("can't run real floats");
+			}
+			
+		}
+		/// check for ONE FLOAT
+		/// thanks stupid oscP5
+		if(theOscMessage.checkTypetag("f")) {
+			/// set up strings for the 2 values because stupid OSC
+			String str0 = theOscMessage.toString();
+			String str1 = theOscMessage.toString();
+
+			try{
+			
+			 // println(" VALUE 0: "+theOscMessage.get(0).floatValue());
+			   if(addr.equals("/TwitterPlanet/fader1")){ 
+				   // targetZoom = max(targetZoom - 0.1f, 0.5f);
+				   // targetZoom = min(targetZoom + 0.1f, 1.9f);
+				   float val0 = theOscMessage.get(0).floatValue();
+				   println("DO ZOOM " + addr + " " + val0);
+				   targetZoom = map(val0, 0,1,0.5f, 1.9f);
+				   
+			   	} 
+			    else if(addr.equals("/1/fader2")){ 
+			    	println("v2 " + str0);
+			    }
+			    else if(addr.equals("/1/xy1")){ 
+			    	
+			    }
+			    else if(addr.equals("/TwitterPlanet/toggle1")){ 
+			    	println("toggle visibility");
+			    	theDestroyer.toggleVisibility();
+			    	
+			    }
+			    else if(addr.equals("/1/toggle2")){ 
+			    	
+			    }
+			    else if(addr.equals("/1/toggle3")){ 
+			    	
+			    }
+			    else if(addr.equals("/1/toggle4")){ 
+			    	
+			    }
+			} catch (Exception e){
+				println(" osc error: " + e);
+			}
+		
+		
+		
+		 }
+
 		  /// control x and y globe
 		  
 		  /// control x and y destroyer
 	}
+
 	//////// keyboard input
 	public void keyPressed() {
 		if (key == '-') {
