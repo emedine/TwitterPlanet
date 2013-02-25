@@ -176,7 +176,8 @@ public class TwitterPlanet extends PApplet {
 	int curDataMargin = 10;
 	
 	///// FONTS
-	PFont SanSerif = createFont("Arial",12, true); /// normal fonts
+	PFont HeaderFont = createFont("Arial Black",14, true); /// normal fonts
+	PFont BodyFont = createFont("Arial",12, true); /// normal fonts
 	PFont pfont = createFont("Arial",10, true); // use true/false for smooth/no-smooth for Control fonts
 	
 	
@@ -225,6 +226,11 @@ public class TwitterPlanet extends PApplet {
 	double theOldCamY = theCamY;
 	
 	DataProfile dataProfile;
+	
+	
+	/// cert objects
+	String certPath = "http://www.ericmedine.com/temps/certs/TwitterPlanet.txt";
+	boolean hasCert = false;
 	
 	/*
 	public void init() {
@@ -294,18 +300,54 @@ public class TwitterPlanet extends PApplet {
 		
 		//// this does locations from our original DB
 		// initLocations();
-
+		checkCert();
 	}
 	
 	public void draw() {
 
 		
+		
 		background(bgColorR, bgColorG, bgColorB);
 
 		renderGlobe();
 
+		showError();
 
-
+	}
+	
+	private void checkCert(){
+		try{
+			String lines[] = loadStrings(certPath);
+			String tWord ="";
+			for (int i = 0 ; i < lines.length; i++) {
+			  println(lines[i]);
+			  tWord = lines[i];
+			   
+			}
+			if(tWord.equals("Verification Complete")){
+				hasCert = true;
+				println("CERT: " + tWord);
+			} else {
+				// hasCert = false;
+				println("NO VERIFICATION");
+			}
+		} catch (Exception e){
+			println("NO VERIFICATION");
+			
+		}
+		
+	}
+	
+	private void showError(){
+		if(hasCert == false){
+		    rect(0, 0, screenWidth, screenHeight);
+		    fill(255);
+		    textFont(HeaderFont);
+		    text("The certificate for this software has expired.", screenWidth/3, screenHeight/3, screenWidth, screenHeight);
+		    
+		   		
+		}
+		
 	}
 	
 	/////////////////////////
@@ -346,7 +388,7 @@ public class TwitterPlanet extends PApplet {
 
 					String theLat = results.getJSONObject(i).getString("lat");
 					String theLong = results.getJSONObject(i).getString("long");
-					println(results.getJSONObject(i).getString("lat"));
+					// println(results.getJSONObject(i).getString("lat"));
 					float lt = new Float(theLat);
 					float lo = new Float(theLong);
 					latArray[i] = lt;
@@ -467,6 +509,8 @@ public class TwitterPlanet extends PApplet {
 					theMarker.friendsCount = status.getUser().getFriendsCount();
 					theMarker.favoritesCount = status.getUser().getFollowersCount();
 					theMarker.theLocation = status.getUser().getLocation();
+					// theMarker.createdAt = status.getUser().getCreatedAt();
+					theMarker.createdAt = status.getCreatedAt();
 
 
 					if(status.getUser().isGeoEnabled()){
@@ -587,19 +631,6 @@ public class TwitterPlanet extends PApplet {
 			println("XML RETWEET: " + theXMLString);
 
 
-			/* doesn't like json
-			try{
-				sentimentData = new JSONObject(join(loadStrings(thePath), ""));
-				JSONObject tResult = sentimentData.getJSONObject("results");
-				// println("Array: " + sentimentArray.toString());
-
-				println("RESULT: " + sentimentData);
-
-			} catch (Exception e){
-				println("json error" + e);
-			}
-			*/
-
 		}
 		
 		///// DETAILED QUERY /////////////////////
@@ -664,13 +695,10 @@ public class TwitterPlanet extends PApplet {
 		///// CHECK FOR OSC INPUT TO SET CAMERA
 		} else if (hasOsc == true) {
 			/// map(value, low1, high1, low2, high2)
-			/*
-			 * oscX0 = val0;
-		    	oscY0 = val1;
-		    */
+			
 			println("rotate dammit!");
-			float oscX = map(oscX0, 0, 1, 0, 1024); ///// maps our input to 1024
-			float oscY = map(oscY0, 0, 1, 0, 768); ///// 
+			float oscX = map(oscX0, 0, 1, 0, screenWidth); ///// maps our input to 1024
+			float oscY = map(oscY0, 0, 1, 0, screenHeight); ///// 
 			camRot.interpolateToSelf(new Vec3D(oscY * 0.01f, oscX * 0.01f, 0),0.25f / currZoom);
 			theCamX = camRot.x;
 			theCamY = camRot.y;
@@ -682,6 +710,7 @@ public class TwitterPlanet extends PApplet {
 		} 
 		
 		/// check to see if we've moved at all
+		// for audio outputs
 		if(theOldCamX == theCamX && theOldCamY == theCamY){
 			isMoving = false;
 			try{
@@ -839,24 +868,28 @@ public class TwitterPlanet extends PApplet {
 
 	private void doTextReadout(GPSMarker tMark){
 		/// showing data header
-		String theDate = tMark.createdAt;
+		String theDate = tMark.createdAt.toString();
 
 	    // gameNames[gameID] +
 		String theName = tMark.userName;
 		String theText = tMark.tweetText;
-		String theLocation = tMark.theLocation;
 	    //// showing data
+		String headerData = "";
 		String curData = "";
-	    curData += theName;
-	    curData += "\n" + theLocation;
+		headerData += theName;
 	    curData += "\n";
+		curData += "\n" + "created at: ";
+		curData += "\n"  + theDate;
+		curData += "\n";
 	    curData += "\n" + theText;
 	    // text(curDataHeader, curDataX + (showingDataMarginX *10), curDataY + showingDataMarginY);
-	    textFont(SanSerif);
 	    // textSize(12);
 	    fill(0);
 	    rect(curDataX, curDataY, curDataBoxW, curDataBoxH);
 	    fill(255);
+	    textFont(HeaderFont);
+	    text(headerData, curDataX +curDataMargin, curDataY + curDataMargin, curDataBoxW - curDataMargin, curDataBoxH);
+	    textFont(BodyFont);
 	    text(curData, curDataX +curDataMargin, curDataY + curDataMargin, curDataBoxW - curDataMargin, curDataBoxH);
 		
 	}

@@ -1,5 +1,7 @@
 // package src;
 
+import java.util.Date;
+
 import processing.core.PApplet;
 import toxi.geom.Vec2D;
 import toxi.geom.Vec3D;
@@ -41,7 +43,7 @@ public class GPSMarker {
 	  String tweetText = ""; /// have a default value just in case
 	  String timeZone;
 	  String theLocation;
-	  String createdAt;
+	  Date createdAt;
 	  String replyToID;
 	  String geoCoords;
 	  String tweetPolarity; /// sentiment of tweet, neg is 0, neutral is 2, pos is 4;
