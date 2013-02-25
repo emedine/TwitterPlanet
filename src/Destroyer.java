@@ -68,26 +68,12 @@ public class Destroyer {
 		  int theAlpha = Math.round(rnd2*255);
 		   */
 		  if (isVisible) {
-			  
-			  /*
-			  pApp.fill(255);
-			  pApp.shape(crossHair, screenPos.x, screenPos.y, 30, 30);
-			  pApp.text(theLong, screenPos.x + 30, screenPos.y);
-			  pApp.text(" " + theLat, screenPos.x + 30, screenPos.y + 10);
-			  */
-			  //*
-			  
-			  // show actual pos
-			  /*
-			  pApp.fill(255,0,0);
-			  pApp.rect(screenPos.x, screenPos.y, 10,10);
-			  */
 			  int lineWidth = 30;
 			  int tSpacing = 5;
 			  pApp.fill(255);
 			/// do numbers
-			  pApp.text(theLong, screenPos.x + 5, screenPos.y + 20);
-			  pApp.text(" " + theLat, screenPos.x + 5, screenPos.y + 30);
+			  pApp.text(theLong, screenPos.x + 8, screenPos.y + 23);
+			  pApp.text(" " + theLat, screenPos.x + 8, screenPos.y + 33);
 			  
 			  pApp.fill(0);
 			  pApp.stroke(255);

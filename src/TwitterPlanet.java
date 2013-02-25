@@ -136,7 +136,7 @@ public class TwitterPlanet extends PApplet {
 	JSONObject dbData;
 	
 	////// Twitter Params
-	int tweetLimit = 30; // 6; // upper limit for tweets
+	int tweetLimit = 300; // 6; // upper limit for tweets
 	int curTweetNum = 0;
 	
 	/// JSON STUFF FOR TWITTER
@@ -180,6 +180,12 @@ public class TwitterPlanet extends PApplet {
 	PFont pfont = createFont("Arial",10, true); // use true/false for smooth/no-smooth for Control fonts
 	
 	
+	///// COLORS
+	int bgColorR = 0;
+	int bgColorG = 0;
+	int bgColorB = 0;
+	
+	
 	// / lat and long arrays
 	/// these are placeholders
 	float[] latArray;
@@ -210,8 +216,11 @@ public class TwitterPlanet extends PApplet {
 	float theLat= 500;
 	float theLong = 500;
 
-	double theCamX = 2.4999995; /// initial camera position
-	double theCamY = 3.1199994;
+	
+	double defaultCamX = 2.4999995; 
+	double defaultCamY = 3.1199994;
+	double theCamX = defaultCamX; // 2.4999995; /// initial camera position
+	double theCamY = defaultCamY; // 3.1199994;
 	double theOldCamX = theCamX;
 	double theOldCamY = theCamY;
 	
@@ -291,7 +300,7 @@ public class TwitterPlanet extends PApplet {
 	public void draw() {
 
 		
-		background(165);
+		background(bgColorR, bgColorG, bgColorB);
 
 		renderGlobe();
 
@@ -684,8 +693,7 @@ public class TwitterPlanet extends PApplet {
 		} else {
 			isMoving = true;
 			try{
-			/// saw.setAmp(1f);
-				
+
 			} catch (Exception e){
 				// println("can't set amplitude: " + e);
 			}
@@ -791,30 +799,22 @@ public class TwitterPlanet extends PApplet {
 		
 		
 		if (hasOsc == true){
-			/*
-			theLat = map(oscY1, 1, 0, 0, 90);
-			theLong = map(oscX1, 0, 1, -180, 180);
-			*/
-			theLat = map(oscX1, 0, screenWidth, 0, 90);
-			theLong = map(oscY1, 0, screenHeight, -180, 0);
+			// theLat = map(oscY1, 1, 0, 0, 90);
+			// theLong = map(oscX1, 0, 1, -180, 180);
+			theLat = map(oscY1, 0, screenWidth, 0, 90);
+			theLong = map(oscX1, 0, screenHeight, -180, 180);
 		} else {
 			// theLat = map(mouseY, 600, 0, 0, 90);
 			// theLong = map(mouseX, 200, 800, -180, 180);
 		
 		}
-		if (!mousePressed && !hasOsc) {
+		if (!mousePressed) {
 			theLat = map(mouseY, 0, screenWidth, 0, 90);
-			theLong = map(mouseX, 0, screenHeight, -180, 0);
-			/*
-			 * old positioning
-			theLat = map(mouseY, 0, 1024, 0, 90);
-			theLong = map(mouseX, 0, 768, -180, 180);
-			*/
+			theLong = map(mouseX, 0, screenHeight, -180, 180);
 		}
 		theDestroyer.setSpherePosition(theLong, theLat); //sends lat and long converted from default
 		theDestroyer.computePosOnSphere(EARTH_RADIUS);
-		
-		
+
 		//// CHECK FOR INTERSECTION with other markers
 		for(int i=0; i<GPSArray.size(); i++){
 		// for(int i=0; i<2; i++){
@@ -840,16 +840,6 @@ public class TwitterPlanet extends PApplet {
 	private void doTextReadout(GPSMarker tMark){
 		/// showing data header
 		String theDate = tMark.createdAt;
-		/*
-		String[] tDate = new String[3];
-		tDate = theDate.split("-");
-		String tDay = tDate[2];
-		String tMonth = tDate[1];
-		String tYear = tDate[0];
-		
-		/// String tDay, String tMonth, String tYear
-		String newDate = doParseDate.parseDate(tDay, tMonth, tYear);
-*/
 
 	    // gameNames[gameID] +
 		String theName = tMark.userName;
@@ -873,21 +863,7 @@ public class TwitterPlanet extends PApplet {
 	/////////////////////////////////
 	//////// OSC INPUT //////////////
 	/////////////////////////////////
-	/*
-	void oscEvent(OscMessage theOscMessage) {
-	 if(theOscMessage.typetag().equals("i")) {
-	      // checking both, the address pattern and the typetag, 
-	      // guarantees safe value parsing and data transfer.
-	      println("got a /test message with typetag i (int)");
-	      // if the value at index 0 is not of type int, oscP5 will thrown
-	      // an error message of type java.lang.reflect.InvocationTargetException
-	      int a = theOscMessage.get(0).intValue();
-	      println("value at index 0 (int expected) : "+a);
-	 	}
-	}
-	*/
 	
-	//*
 	public void oscEvent(OscMessage theOscMessage) {
 		 // print the address pattern of the received OscMessage
 		String addr = theOscMessage.addrPattern();
@@ -902,45 +878,42 @@ public class TwitterPlanet extends PApplet {
 		/// we have to check for init OSC values
 		/// so the mouse doesn't override it on 
 		/// globe and cursor postion
-		if(addr.indexOf("/TwitterPlanet/xy1") !=-1){ // ){
+		if(addr.indexOf("/TwitterPlanet/xy1") !=-1){ 
 			hasOsc = true;
 			println(hasOsc);
 		}
-		if(addr.indexOf("/TwitterPlanet/xy2") !=-1){ // ){
+		if(addr.indexOf("/TwitterPlanet/xy2") !=-1){ 
 			hasOsc = true;
 			println(hasOsc);
 		}
 		
+		
 		if(theOscMessage.checkTypetag("i")) {
 			 if(addr.equals("/TwitterPlanet/fader1")){ 
 			   int valI = theOscMessage.get(0).intValue();
-			   // targetZoom = max(targetZoom - 0.1f, 0.5f);
-			   // targetZoom = min(targetZoom + 0.1f, 1.9f);
-			   // float z = new Float(str0);
-			   println("DO ZOOM " + addr + " " + valI);
-			   // targetZoom = map(z, 0,1,0.5f, 1.9f);
 			   
 			 } 
 		}
 
 		 
-		/// check for FLOATS
-		/// thanks stupid oscP5
+		/// check for 2 FLOATS
 		if(theOscMessage.checkTypetag("ff")) {
 			float val0 = theOscMessage.get(0).floatValue();
 			float val1 = theOscMessage.get(1).floatValue();
-			/// set up strings for the 2 value depths of the input
+			// hasOsc == true
 			println("FF type: " + val0 + " " + val1);
 			try {
 			   if(addr.equals("/TwitterPlanet/xy1")){ 
-			    	println("good job! /TwitterPlanet/xy1 " + val0);
+			    	println("Do globe " + val0);
 			    	oscX0 = new Float(val0);
 			    	oscY0 = new Float(val1);
 			    }
 			    else if(addr.equals("/TwitterPlanet/xy2")){ 
-			    	println("good job! /TwitterPlanet/xy2 " + val1);
-			    	oscX1 = new Float(val0);
-			    	oscY1 = new Float(val1);
+			    	float val2 = theOscMessage.get(0).floatValue();
+					float val3 = theOscMessage.get(1).floatValue();
+			    	println("Do cursor " + val2);
+			    	oscX1 = new Float(val2);
+			    	oscY1 = new Float(val3);
 			    }
 			} catch (Exception e){
 				println("can't run real floats");
@@ -976,14 +949,28 @@ public class TwitterPlanet extends PApplet {
 			    	theDestroyer.toggleVisibility();
 			    	
 			    }
-			    else if(addr.equals("/1/toggle2")){ 
+			    else if(addr.equals("/TwitterPlanet/toggle2")){ 
+			    	println("reset position");
+			    	theCamX = defaultCamX; 
+			    	theCamY = defaultCamY;
+			    	targetZoom = 1;
+
 			    	
 			    }
-			    else if(addr.equals("/1/toggle3")){ 
-			    	
+			    else if(addr.equals("/TwitterPlanet/rotary1")){ 
+			    	int v = parseInt(theOscMessage.get(0).floatValue());
+			    	println("R: " + v + " " + str0);
+			    	bgColorR = v;
 			    }
-			    else if(addr.equals("/1/toggle4")){ 
-			    	
+			    else if(addr.equals("/TwitterPlanet/rotary2")){ 
+			    	int v = parseInt(theOscMessage.get(0).floatValue());
+			    	println("G: " + v + " " + str0);
+			    	bgColorG = v;
+			    }
+			    else if(addr.equals("/TwitterPlanet/rotary3")){ 
+			    	int v = parseInt(theOscMessage.get(0).floatValue());
+			    	println("B: " + v + " " + str0);
+			    	bgColorB = v;
 			    }
 			} catch (Exception e){
 				println(" osc error: " + e);
